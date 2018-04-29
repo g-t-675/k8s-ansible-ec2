@@ -1,0 +1,9 @@
+---
+# Creates a new ec2 key pair named `example` if not present using provided key
+# material
+
+- include_tasks: keypair_helper.yml
+  with_items:
+    "{{ keypairs }}"
+  loop_control:
+    loop_var: keypair

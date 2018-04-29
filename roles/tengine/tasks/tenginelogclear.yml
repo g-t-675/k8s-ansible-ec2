@@ -1,0 +1,15 @@
+---
+- name: add log clean script
+  template:
+    src: "{{ item }}"
+    dest: "/root"
+  with_items:
+    - tenginelogclear.sh
+
+- name: add crontab 
+  cron:
+    name: "check dirs"
+    state: present
+    minute: "0"
+    hour: "5"
+    job: "sh /root/tenginelogclear.sh"

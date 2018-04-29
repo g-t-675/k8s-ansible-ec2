@@ -1,0 +1,45 @@
+NGINX_VERSION: 1.13.6
+TARBALL_NAME: nginx-{{ NGINX_VERSION }}.tar.gz
+NGINX_URL: http://nginx.org/download/{{ TARBALL_NAME }}
+BUILD_DIR: /root/nginx-{{ NGINX_VERSION }}
+DOWNLOAD_DIR: /root
+INSTALLATION_DIR: /usr/local/nginx
+NGINX_LOG_DIR: /data/nginxlog
+NGINX_APP_LOG_DIR: /data/nginxlog/app
+NGINX_APP_LOG_PATH: "{{ NGINX_APP_LOG_DIR }}/%Y%m%d/access_%Y%m%d%H.log"
+SERVER_DOMAIN: ""
+SSL_CERTIFICATE: ""
+SSL_CERTIFICATE_KEY: ""
+SSL_DHPARAM: "dh4096.pem"
+
+NGINX_DEV_URL: "https://github.com/simpl/ngx_devel_kit/archive/master.zip"
+NGINX_DEV_NAME: nginx_dev_kit.zip
+NGINX_DEV_BUILD_DIR: /root/ngx_devel_kit-master
+
+NGINX_LDAP_URL: https://github.com/kvspb/nginx-auth-ldap/archive/master.zip
+NGINX_LDAP_NAME: nginx_ldap.zip
+NGINX_LDAP_BUILD_DIR: /root/nginx-auth-ldap-master
+
+NGINX_ECHO_URL: https://github.com/openresty/echo-nginx-module/archive/master.zip
+NGINX_ECHO_NAME: nginx_echo.zip
+NGINX_ECHO_BUILD_DIR: /root/echo-nginx-module-master
+
+NGINX_LUA_URL:  https://github.com/openresty/lua-nginx-module/archive/master.zip
+NGINX_LUA_NAME: nginx_lua.zip
+NGINX_LUA_BUILD_DIR: /root/echo-nginx-module-master
+
+OPENSSL_URL: https://www.openssl.org/source/openssl-1.0.2l.tar.gz
+OPENSSL_NAME: openssl.tar.gz
+OPENSSL_BUILD_DIR: /root/openssl-1.0.2l
+
+PCRE_URL: https://ftp.pcre.org/pub/pcre/pcre-8.41.tar.gz
+PCRE_NAME: pcre-8.41.tar.gz
+PCRE_BUILD_DIR: /root/pcre-8.41
+
+ZLIB_URL: http://zlib.net/zlib-1.2.11.tar.gz
+ZLIB_NAME: zlib-1.2.11.tar.gz
+ZLIB_BUILD_DIR: /root/zlib-1.2.11
+
+LUAJIT_URL: http://luajit.org/download/LuaJIT-2.0.5.tar.gz
+LUAJIT_NAME: LuaJIT-2.0.5.tar.gz
+LUAJIT_BUILD_DIR: /root/LuaJIT-2.0.5.tar.gz

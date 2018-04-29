@@ -1,0 +1,4 @@
+---
+
+- name: enable nginx
+  command: systemctl enable nginx

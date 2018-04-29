@@ -1,0 +1,4 @@
+---
+
+- name: start tengine
+  command: systemctl start tengine

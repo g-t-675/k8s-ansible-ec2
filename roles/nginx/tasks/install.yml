@@ -1,0 +1,144 @@
+- name: Install epel-release
+  yum:
+    name: epel-release
+    state: present
+
+- name: Install gcc lua cronolog
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - gcc
+    - gcc-c++
+    - autoconf
+    - lua-devel
+    - luajit-devel
+    - pcre-devel
+    - openssl-devel
+    - wget
+    - cronolog
+    - gzip
+    - zip
+    - unzip
+    - zlib
+    - openldap 
+    - openldap-devel
+
+- name: download nginx
+  shell: wget -O {{ DOWNLOAD_DIR }}/{{TARBALL_NAME}} {{ NGINX_URL }}
+  args:
+    creates: "{{ DOWNLOAD_DIR }}/{{TARBALL_NAME}}"
+
+- name: download openssl
+  shell: wget -O {{ DOWNLOAD_DIR }}/{{OPENSSL_NAME}} {{ OPENSSL_URL }}
+  args:
+    creates: "{{ DOWNLOAD_DIR }}/{{OPENSSL_NAME}}"
+
+- name: download pcre
+  shell: wget -O {{ DOWNLOAD_DIR }}/{{PCRE_NAME}} {{ PCRE_URL }}
+  args:
+    creates: "{{ DOWNLOAD_DIR }}/{{PCRE_NAME}}"
+
+- name: download zlib
+  shell: wget -O {{ DOWNLOAD_DIR }}/{{ZLIB_NAME}} {{ ZLIB_URL }}
+  args:
+    creates: "{{ DOWNLOAD_DIR }}/{{ZLIB_NAME}}"
+
+- name: download nginx dev kit
+  shell: wget -O {{ DOWNLOAD_DIR }}/{{NGINX_DEV_NAME}} {{ NGINX_DEV_URL }}
+  args:
+    creates: "{{ DOWNLOAD_DIR }}/{{NGINX_DEV_NAME}}"
+
+- name: download nginx ldap
+  shell: wget -O {{ DOWNLOAD_DIR }}/{{NGINX_LDAP_NAME}} {{ NGINX_LDAP_URL }}
+  args:
+    creates: "{{ DOWNLOAD_DIR }}/{{NGINX_LDAP_NAME}}"
+
+- name: download nginx echo
+  shell: wget -O {{ DOWNLOAD_DIR }}/{{NGINX_ECHO_NAME}} {{ NGINX_ECHO_URL }}
+  args:
+    creates: "{{ DOWNLOAD_DIR }}/{{NGINX_ECHO_NAME}}"
+
+- name: download nginx lua
+  shell: wget -O {{ DOWNLOAD_DIR }}/{{NGINX_LUA_NAME}} {{ NGINX_ECHO_URL }}
+  args:
+    creates: "{{ DOWNLOAD_DIR }}/{{NGINX_LUA_NAME}}"
+
+- name: Unpack nginx tar
+  shell: tar zxvf {{ TARBALL_NAME }}
+  args:
+    chdir: "{{ DOWNLOAD_DIR }}"
+
+- name: Unpack openssl tar
+  shell: tar zxvf {{ OPENSSL_NAME }}
+  args:
+    chdir: "{{ DOWNLOAD_DIR }}"
+
+- name: Unpack pcre tar
+  shell: tar zxvf {{ PCRE_NAME }}
+  args:
+    chdir: "{{ DOWNLOAD_DIR }}"
+
+- name: Unpack zlib tar
+  shell: tar zxvf {{ ZLIB_NAME }}
+  args:
+    chdir: "{{ DOWNLOAD_DIR }}"
+
+- name: Unpack nginx dev kit
+  shell: unzip -o {{NGINX_DEV_NAME}}
+  args:
+    chdir: "{{ DOWNLOAD_DIR }}"
+
+- name: Unpack nginx lua tar
+  shell: unzip -o {{NGINX_LUA_NAME}}
+  args:
+    chdir: "{{ DOWNLOAD_DIR }}"
+
+- name: Unpack nginx echo tar
+  shell: unzip -o {{NGINX_ECHO_NAME}}
+  args:
+    chdir: "{{ DOWNLOAD_DIR }}"
+
+- name: Unpack nginx ldap tar
+  shell: unzip -o {{NGINX_LDAP_NAME}}
+  args:
+    chdir: "{{ DOWNLOAD_DIR }}"
+
+# - name: build pcre
+#   shell: ./configure --prefix=/usr/local/pcre --enable-utf8 --enable-pcregrep-libbz2 --enable-pcregrep-libz
+#   args:
+#     chdir: "{{ PCRE_BUILD_DIR }}"
+
+# - name: install pcre
+#   shell: make install
+#   args:
+#     chdir: "{{ PCRE_BUILD_DIR }}"
+
+- name: Build nginx
+  shell: "./configure --user=www --group=www 
+          --prefix={{ INSTALLATION_DIR }} 
+          --with-pcre={{ PCRE_BUILD_DIR }}
+          --with-zlib={{ ZLIB_BUILD_DIR }}
+          --with-http_ssl_module
+          --with-http_gzip_static_module 
+          --with-http_stub_status_module 
+          --with-openssl={{ OPENSSL_BUILD_DIR }} 
+          --add-module={{ NGINX_DEV_BUILD_DIR }} 
+          --add-module={{ NGINX_ECHO_BUILD_DIR }} 
+          --add-module={{ NGINX_LDAP_BUILD_DIR }} 
+          --with-stream 
+          --with-stream_ssl_module 
+          --error-log-path={{ NGINX_LOG_DIR }}/error.log 
+          --http-log-path={{ NGINX_LOG_DIR }}/access.log 
+          --with-http_v2_module 
+          --with-threads"
+  args:
+    chdir: "{{ BUILD_DIR }}"
+
+- name: install nginx
+  shell: make install
+  args:
+    chdir: "{{ BUILD_DIR }}"
+
+- name: configure nginx
+  include_tasks: configure.yml

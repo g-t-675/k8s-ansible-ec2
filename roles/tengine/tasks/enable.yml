@@ -1,0 +1,4 @@
+---
+
+- name: enable tengine
+  command: systemctl enable tengine

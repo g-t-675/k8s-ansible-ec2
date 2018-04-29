@@ -1,0 +1,34 @@
+- name: update tengine config directory
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+  with_items:
+    - "{{ INSTALLATION_DIR }}/conf/vhost_conf"
+    - "{{ INSTALLATION_DIR }}/ssl"
+
+- name: configure tengine
+  template:
+    src: "{{ item }}"
+    dest: "{{ INSTALLATION_DIR }}/conf"
+  with_items:
+    - nginx.conf
+
+- name: copy ssl 
+  copy: 
+    src: "{{ item }}"
+    dest: "{{ INSTALLATION_DIR }}/ssl"
+  with_items:
+    - {{ SSL_DHPARAM }}
+    - {{ SSL_CERTIFICATE }}
+    - {{ SSL_CERTIFICATE_KEY }}
+
+- name: install service
+  template:
+    src: "{{ item }}"
+    dest:  /usr/lib/systemd/system/{{ item }}
+  with_items:
+    - tengine.service
+
+- name: install service
+  command: systemctl daemon-reload

@@ -1,0 +1,31 @@
+---
+- name: Fail play if the acname name is not defined
+  fail: 
+    msg: "Specify the acname name: -e 'acname=launch'"
+  when: acname is undefined
+  tags: ["keypair", "launch", "start", "stop", terminate", "describe", "ssh"]
+
+- name: Create KeyPair
+  include_tasks: keypair.yml
+  when: acname == "keypair"
+  tags: ['keypair']
+
+- name: Launch EC2 instances
+  include_tasks: launch.yml
+  when: acname == "launch"
+  tags: ['launch']
+
+- name: Terminate EC2 instances
+  include_tasks: terminate.yml
+  when: acname == "terminate"
+  tags: ['terminate']
+
+- name: update known_hosts
+  include_tasks: ssh.yml
+  when: acname == "ssh"
+  tags: ['ssh']
+
+- name: optimize instances
+  include_tasks: optimize.yml
+  when: acname == "optimize"
+  tags: ['optimize']

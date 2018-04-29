@@ -1,0 +1,17 @@
+---
+
+- name:               create key pairs
+  command: 
+    ssh-keygen -t rsa -f {{ keypair.key_files }} -N '' -C '{{ keypair.key_name }}' creates={{ keypair.key_files }}
+
+- name: debug
+  debug:
+    msg: "{{ keypair.key_name }} {{item}}"
+  with_file:
+    "{{ keypair.key_files }}"
+
+- name:                regist ec2 key
+  ec2_key:
+    name:              "{{ keypair.key_name }}"
+    key_material:      "{{ item }}"
+  with_file:           "{{ keypair.key_files }}.pub"

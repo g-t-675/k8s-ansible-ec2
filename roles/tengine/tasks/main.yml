@@ -1,0 +1,43 @@
+---
+
+# roles/nginx/tasks/main.yml
+
+- name: Install
+  include_tasks: install.yml
+  when: acname == "install"
+  tags: ['install']
+
+- name: Configure tengine
+  include_tasks: configure.yml
+  when: acname == "configure"
+  tags: ['configure']
+
+- name: Start tengine
+  include_tasks: start.yml
+  when: acname == "start"
+  tags: ['start']
+
+- name: Stop tengine
+  include_tasks: stop.yml
+  when: acname == "stop"
+  tags: ['stop']
+
+- name: Restart tengine
+  include_tasks: restart.yml
+  when: acname == "restart"
+  tags: ['restart']
+
+- name: Enable tengine
+  include_tasks: enable.yml
+  when: acname == "enable"
+  tags: ['enable']
+
+- name: Disable tengine
+  include_tasks: disable.yml
+  when: acname == "disable"
+  tags: ['disable']
+
+- name: Add log clean
+  include_tasks: tenginelogclear.yml
+  when: acname == "tenginelogclear"
+  tags: ['tenginelogclear']

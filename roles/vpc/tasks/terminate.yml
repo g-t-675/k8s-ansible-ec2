@@ -1,0 +1,133 @@
+---
+
+# roles/vpc/tasks/main.yml
+
+
+# First task : creating the VPC.
+# We are using the variables set in the vars.yml file.
+# The module gives us back its result,
+# which contains information about our new VPC. 
+# We register it in the variable my_vpc.
+
+- name:                   Query For VPC
+  ec2_vpc_net_facts:
+    filters:
+      "tag:Name":         "{{ vpc_name }}"
+      state:              "available"
+  register: my_vpc
+
+# We now use the set_fact module 
+# to save the id of the VPC in a new variable.
+- name:                   Set VPC ID in variable
+  set_fact:
+    vpc_id:               "{{ my_vpc.vpcs[0].id }}"
+
+- name:                   Query For VPC Subnet
+  ec2_vpc_subnet_facts:
+    filters:
+      vpc-id:             "{{ vpc_id }}"
+  register: my_vpc_subnet
+
+#- debug: var=my_vpc_subnet
+  
+- name:                    Create Empty Subnet ID List
+  set_fact:
+    subnet_ids: []
+
+- name:                    Put Subnet ID Into The List
+  set_fact:
+    subnet_ids: "{{ subnet_ids }} + ['{{ item.id }}']" 
+  with_items:
+    "{{ my_vpc_subnet.subnets }}"
+
+- debug: var=subnet_ids
+
+- name:                   Query For VPC Route table
+  ec2_vpc_route_table_facts:
+    filters:
+      vpc-id:             "{{ vpc_id }}"
+  register: my_vpc_route_table
+
+- debug: var=my_vpc_route_table
+
+- name:                    Create Empty Route Table ID List
+  set_fact:
+    route_table_ids: []
+
+- name:                    Put Route Table ID Into The List
+  set_fact:
+    route_table_ids: "{{ route_table_ids }} + ['{{ item.id }}']" 
+  with_items:
+    "{{ my_vpc_route_table.route_tables }}"
+
+- debug: var=route_table_ids
+
+- name:                   Query For VPC Security Group
+  ec2_group_facts:
+    filters:
+      vpc-id:  "{{ vpc_id }}"
+
+  register: my_vpc_group
+
+- debug: var=my_vpc_group
+
+- name:                   Create Empty Security Group ID List
+  set_fact:
+    security_group_ids: []
+
+- name:                   Put Security Group ID Into The List
+  set_fact:
+    security_group_ids:   "{{ security_group_ids }} + ['{{ item.group_id }}']" 
+  when:
+    "item.group_name != 'default'"
+  with_items:
+    "{{ my_vpc_group.security_groups }}"
+
+- debug: var=security_group_ids
+
+- name:                   Query For VPC igw
+  ec2_vpc_igw_facts:
+    filters:
+      attachment.vpc-id:  "{{ vpc_id }}"
+  register: my_vpc_igw
+
+- debug: var=my_vpc_igw
+
+- name:                   Delete VPC`s Internet Gateway
+  ec2_vpc_igw:
+    vpc_id:               "{{ vpc_id }}"
+    state:                "absent"
+
+- name:                   Delete VPC`s Security Group
+  ec2_group:
+    vpc_id:               "{{ vpc_id }}"
+    name:                 "{{ item.name}}"
+    state:                "absent"
+  with_items:
+    "{{ security_group }}"
+
+
+- name:                   Delete VPC`s Route table
+  ec2_vpc_route_table:
+    vpc_id:               "{{ vpc_id }}"
+    lookup:               "tag"
+    tags:
+        Name:             "Public"
+    state:                "absent"
+
+- name:                   Delete VPC`s Subnet
+  ec2_vpc_subnet:
+    vpc_id:               "{{ vpc_id }}"
+    cidr:                 "{{ public_subnet_1_cidr }}"
+    az:                   "{{ aws_region }}a"
+    state:                "absent"
+  with_items:
+    "{{ subnet_ids }}"
+
+
+- name:                   Delete the VPC
+  ec2_vpc_net:
+    name:                 "{{ vpc_name }}"
+    cidr_block:           "{{ vpc_cidr_block }}"
+    state:                "absent"
+  

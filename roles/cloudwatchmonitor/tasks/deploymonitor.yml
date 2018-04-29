@@ -1,0 +1,39 @@
+---
+
+- name: install perl module
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - perl-Switch 
+    - perl-DateTime 
+    - perl-Sys-Syslog 
+    - perl-LWP-Protocol-https 
+    - perl-Digest-SHA
+    - zip
+    - unzip
+    - wget
+
+- name: download monitor script
+  command: "wget http://aws-cloudwatch.s3.amazonaws.com/downloads/CloudWatchMonitoringScripts-1.2.1.zip -O /root/CloudWatchMonitoringScripts-1.2.1.zip"
+
+- name: unzip the package
+  command: "unzip /root/CloudWatchMonitoringScripts-1.2.1.zip"
+  args:
+    chdir: /root
+
+- name: update config
+  template:
+    src: "{{ item }}"
+    dest: "/root/aws-scripts-mon/{{ item }}"
+  with_items:
+    - awscreds.conf
+    - monitor_per_hour.sh
+
+- name: add crontab 
+  cron:
+    name: "execute monitor"
+    state: present
+    minute: "0"
+    hour: "*"
+    job: "sh /root/aws-scripts-mon/monitor_per_hour.sh"

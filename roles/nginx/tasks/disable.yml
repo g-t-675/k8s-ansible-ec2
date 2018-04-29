@@ -1,0 +1,4 @@
+---
+
+- name: disable nginx
+  command: systemctl disable nginx

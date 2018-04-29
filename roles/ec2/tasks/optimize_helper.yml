@@ -1,0 +1,73 @@
+
+- name: add hosts
+  add_host:
+      name: "{{ instance_info.1.public_ip_address }}"
+      groups: "tag_Name_{{ instance_info.0.item.instance_tags.Name }}"
+
+- name: include vars
+  include_vars: "group_vars/tag_Name_{{ instance_info.0.item.instance_tags.Name }}.yml"
+
+- debug: 
+    msg: "{{ ansible_ssh_private_key_file }} {{ instance_info.1.public_ip_address }}"
+
+- name: close firewalld
+  remote_user: centos
+  become: true
+  become_method: sudo
+  become_user: root
+  shell: |
+    systemctl disable firewalld && systemctl stop firewalld && systemctl status firewalld
+    exit 0
+  delegate_to: "{{ instance_info.1.public_ip_address }}"
+
+- name: close swap
+  remote_user: centos
+  become: true
+  become_method: sudo
+  become_user: root
+  shell: |
+    swapoff -a
+    sed 's/.*swap.*/#&/' /etc/fstab
+    exit 0
+  delegate_to: "{{ instance_info.1.public_ip_address }}"
+
+- name: close selinux
+  remote_user: centos
+  become: true
+  become_method: sudo
+  become_user: root
+  shell: |
+    setenforce  0 
+    sed -i "s/^SELINUX=enforcing/SELINUX=disabled/g" /etc/sysconfig/selinux 
+    sed -i "s/^SELINUX=enforcing/SELINUX=disabled/g" /etc/selinux/config 
+    sed -i "s/^SELINUX=permissive/SELINUX=disabled/g" /etc/sysconfig/selinux 
+    sed -i "s/^SELINUX=permissive/SELINUX=disabled/g" /etc/selinux/config 
+    getenforce
+    exit 0
+  delegate_to: "{{ instance_info.1.public_ip_address }}"
+
+- name: enable br_netfilter
+  remote_user: centos
+  become: true
+  become_method: sudo
+  become_user: root
+  shell: |
+    modprobe br_netfilter
+    ls /proc/sys/net/bridge
+    exit 0
+  delegate_to: "{{ instance_info.1.public_ip_address }}"
+
+- name: update sysctl/limits.conf
+  remote_user: centos
+  become: true
+  become_method: sudo
+  become_user: root
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - { src: sysctl.conf, dest: /etc/sysctl.conf }
+    - { src: limits.conf, dest: /etc/security/limits.conf }
+    - { src: k8s.conf, dest: /etc/sysctl.d/k8s.conf }
+  delegate_to: "{{ instance_info.1.public_ip_address }}"
+

@@ -1,0 +1,64 @@
+- name: add group www
+  group: 
+    name: www
+    state: present
+
+- name: add user www
+  user:
+    name: www
+    group: www
+    shell: /sbin/nologin
+    state: present
+
+- name: create nginx config directory
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+  with_items:
+    - "{{ INSTALLATION_DIR }}/conf/vhost_conf"
+    - "{{ INSTALLATION_DIR }}/conf/vhost_conf/stream_conf"
+    - "{{ INSTALLATION_DIR }}/ssl"
+    - "{{ NGINX_LOG_DIR }}"
+
+- name: configure vhost
+  template:
+    src: "{{ item }}"
+    dest: "{{ INSTALLATION_DIR }}/conf/vhost_conf"
+  with_items:
+    - vhost_conf/appconfigloader.conf
+    - vhost_conf/appgraphical.conf
+    - vhost_conf/appsettingservice.conf
+
+- name: configure nginx stream
+  template:
+    src: "{{ item }}"
+    dest: "{{ INSTALLATION_DIR }}/conf/vhost_conf/stream_conf"
+  with_items:
+    - vhost_conf/stream_conf/tcp_20081.conf
+
+- name: configure nginx stream
+  template:
+    src: "{{ item }}"
+    dest: "{{ INSTALLATION_DIR }}/conf/stream_conf"
+  with_items:
+    - vhost_conf/stream_conf/tcp_20081.conf
+
+- name: copy ssl 
+  copy: 
+    src: "{{ item }}"
+    dest: "{{ INSTALLATION_DIR }}/ssl"
+  with_items:
+    - {{ SSL_DHPARAM }}
+    - {{ SSL_CERTIFICATE }}
+    - {{ SSL_CERTIFICATE_KEY }}
+
+- name: install service
+  template:
+    src: "{{ item }}"
+    dest:  /usr/lib/systemd/system/{{ item }}
+  with_items:
+    - nginx.service
+
+- name: install service
+  command: systemctl daemon-reload

@@ -1,0 +1,50 @@
+# AWS region
+aws_region: "{{ lookup('env', 'AWS_REGION') }}"
+
+keypairs:
+  - key_name: "ansible_app_k8s"
+    key_files: "~/.ssh/ansible_app_k8s"
+
+subnet_id: "subnet-b12deed5"
+
+images:
+  centos7: ami-8b5687e6
+  centos6: ami-030bdd6e
+
+ec2_instances:
+  - image: "{{ images.centos7 }}"
+    instance_type: m4.xlarge
+    group: default,ssh_enable
+    instance_tags: 
+        Name: ansible_app_k8s
+        class: master
+    count_tag: 
+        Name: ansible_app_k8s_master
+    exact_count: 3
+    vpc_subnet_id: "{{ subnet_id }}"
+    assign_public_ip: yes
+    key_name: "ansible_app_k8s"
+    ebs_optimized: yes
+    termination_protection: true
+    volumes:
+      - device_name: /dev/sda1
+        volume_type: standard
+        volume_size: 128
+  - image: "{{ images.centos7 }}"
+    instance_type: m4.xlarge
+    group: default,ssh_enable
+    instance_tags: 
+        Name: ansible_app_k8s
+        class: vip_keepalive
+    count_tag: 
+        Name: ansible_app_k8s_vip_keepalive
+    exact_count: 1
+    vpc_subnet_id: "{{ subnet_id }}"
+    assign_public_ip: yes
+    key_name: "ansible_app_k8s"
+    ebs_optimized: yes
+    termination_protection: true
+    volumes:
+      - device_name: /dev/sda1
+        volume_type: standard
+        volume_size: 128

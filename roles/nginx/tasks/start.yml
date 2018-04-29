@@ -1,0 +1,4 @@
+---
+
+- name: start nginx
+  command: systemctl start nginx

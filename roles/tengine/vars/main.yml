@@ -1,0 +1,12 @@
+TENGINE_VERSION: 2.1.2
+TARBALL_NAME: tengine-{{ TENGINE_VERSION }}.tar.gz
+TENGINE_URL: http://tengine.taobao.org/download/{{ TARBALL_NAME }}
+BUILD_DIR: /root/tengine-{{ TENGINE_VERSION }}
+DOWNLOAD_DIR: /root
+INSTALLATION_DIR: /usr/local/tengine
+TENGINE_APP_LOG_DIR: /data/tenginelog/app
+TENGINE_APP_LOG_PATH: "{{ TENGINX_APP_LOG_DIR }}/%Y%m%d/access_%Y%m%d%H.log"
+SERVER_DOMAIN: ""
+SSL_CERTIFICATE: ""
+SSL_CERTIFICATE_KEY: ""
+SSL_DHPARAM: "dh4096.pem"

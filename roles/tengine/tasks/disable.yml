@@ -1,0 +1,4 @@
+---
+
+- name: disable tengine
+  command: systemctl disable tengine

@@ -1,0 +1,30 @@
+---
+- name: Get running EC2 instances for the given tag
+  ec2_instance_facts:
+    filters:
+      "tag:Name": "{{ item.instance_tags.Name }}"
+      instance-state-name: stopped
+  with_items:
+    "{{ ec2_instances }}"
+  register: ec2_info
+
+- name:                    Create Empty Instance ID List
+  set_fact:
+    instance_ids: []
+
+- name:                    Put Subnet ID Into The List
+  set_fact:
+    instance_ids: "{{ instance_ids }} + ['{{ item.1.instance_id }}']" 
+  with_subelements:
+    - "{{ ec2_info.results }}"
+    - instances
+
+- debug:
+    var: instance_ids
+
+- name: Start EC2 instances specified by the given tag
+  ec2:
+    state: running
+    wait: True
+    instance_ids: "{{ item.id }}"
+  with_items: "{{ ec2_info.instances }}"

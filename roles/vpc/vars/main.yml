@@ -1,0 +1,25 @@
+# AWS region
+aws_region: "{{ lookup('env', 'AWS_REGION') }}"
+
+# VPC Information
+vpc_name:       "app-vpc2"
+vpc_cidr_block: "10.10.0.0/16"
+
+# Subnets
+public_subnet:
+  - name: app_subnet_1
+    cidr:  "10.10.1.0/24"
+    az: "a"
+  - name: app_subnet_2
+    cidr:  "10.10.2.0/24"
+    az: "b"
+
+# Security Groups
+security_group:
+  - name: ssh_enable
+    desc: the security group for the ssh
+    rules:
+      - proto: tcp
+        from_port: 22
+        to_port: 22
+        cidr_ip: 0.0.0.0/0

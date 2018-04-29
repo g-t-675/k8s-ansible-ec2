@@ -1,0 +1,10 @@
+---
+
+- name: Execute VPC roles
+  hosts: localhost
+  connection: local
+  gather_facts: False
+  vars_files:
+    - "{{ vars_file }}"
+  roles:
+    - vpc

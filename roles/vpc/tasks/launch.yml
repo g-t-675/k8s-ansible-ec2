@@ -1,0 +1,128 @@
+---
+
+# roles/vpc/tasks/main.yml
+
+
+# First task : creating the VPC.
+# We are using the variables set in the vars.yml file.
+# The module gives us back its result,
+# which contains information about our new VPC. 
+# We register it in the variable my_vpc.
+
+- name:               Create VPC
+  ec2_vpc_net:
+    name:             "{{ vpc_name }}"
+    cidr_block:       "{{ vpc_cidr_block }}"
+    state:            "present"
+  register: my_vpc
+
+- name: print my_vpc
+  debug:
+    var: my_vpc
+
+# We now use the set_fact module 
+# to save the id of the VPC in a new variable.
+
+- name:               Set VPC ID in variable
+  set_fact:
+    vpc_id:           "{{ my_vpc.vpc.id }}"
+
+# Creating our only Subnet in the VPC.
+# A subnet needs to be located in an Availability Zone (or AZ).
+# Again, we register the results in a variable for later.
+
+- name:               Create Public Subnet
+  ec2_vpc_subnet:
+    state:            "present"
+    vpc_id:           "{{ vpc_id }}"
+    cidr:             "{{ item.cidr }}"
+    az:               "{{ aws_region }}{{item.az}}"
+    resource_tags:
+      Name:           "{{ item.name }}"
+  with_items:
+    "{{ public_subnet }}"
+  register: my_public_subnets
+
+- name: print my_public_subnets
+  debug:
+    var: my_public_subnets
+
+# We save the id of the Public Subnet in a new variable.
+
+- name:                    Create Empty Subnet ID List
+  set_fact:
+    subnet_ids: []
+
+- name:                    Put Subnet ID Into The List
+  set_fact:
+    subnet_ids: "{{ subnet_ids }} + ['{{ item.subnet.id }}']" 
+  with_items:
+    "{{ my_public_subnets.results }}"
+
+# Use ec2_group_facts to get the default security group of the vpc
+# save the security group id in a new variable
+
+- name:               get default security group
+  ec2_group_facts:
+    filters:
+      vpc_id:           "{{ my_vpc.vpc.id }}"
+      group-name:       "default"
+  register: default_group
+
+- name: print default_group
+  debug:
+    var: default_group
+
+- name:
+  set_fact:
+    vpc_default_group_id: "{{ default_group.security_groups.0.group_id }}"
+
+# Every VPC needs at least one Internet Gateway.
+# This component allows traffic between the VPC and the outside world.
+
+- name:               Create Internet Gateway for VPC
+  ec2_vpc_igw:
+    vpc_id:           "{{ vpc_id }}"
+    state:            "present"
+  register: my_vpc_igw
+
+
+# We save the id of the Internet Gateway in a new variable.
+
+- name:               Set Internet Gateway ID in variable
+  set_fact:
+    igw_id:           "{{ my_vpc_igw.gateway_id }}"
+
+# Now we set up a Route Table. 
+# We attach that Route Table to the Public Subnet.
+# The route we create here defines the default routing 
+# of the table, redirecting requests to the Internet Gateway. 
+# We don't see it here, but the route table will also contain 
+# a route for resources inside the VPC, so that if we need 
+# to reach an internal resource, we don't go to the Internet
+# Gateway.
+
+- name:               Set up public subnet route table
+  ec2_vpc_route_table:
+    vpc_id:           "{{ vpc_id }}"
+    tags:
+      Name:           "Public"
+    subnets: "{{ subnet_ids }}"
+    routes:
+      - dest:         "0.0.0.0/0"
+        gateway_id:   "{{ igw_id }}"
+
+
+# Finally, we create Multi Security Group.
+# The Security Group is configed in vars.yml
+
+- name:               Create Security Groups
+  ec2_group:
+    name:             "{{item.name}}"
+    description:      "{{item.desc}}"
+    vpc_id:           "{{ vpc_id }}"
+    rules:            "{{ item.rules }}"
+    tags:
+      Name:           "{{ item.name}}"
+  with_items:
+    "{{ security_group }}"

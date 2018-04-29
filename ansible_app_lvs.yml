@@ -1,0 +1,21 @@
+---
+- name: Creating host group ansible_app_lvs from dynamic inventory
+  hosts: localhost
+  connection: local
+  tags: ['start', 'stop', 'restart', 'enable', 'disable', 'install', 'configure', 'deploy', 'deploymonitor']
+  vars:
+    fin_tag_name: "{{ tag_name | default('ansible_app_lvs', true) }}"
+    ansible_app_lvs_tag_name : "tag_Name_{{ fin_tag_name | replace('-', '_') }}"
+  tasks:
+    - add_host: name={{ item }} groups=ansible_app_lvs
+      with_items: "{{ groups[ansible_app_lvs_tag_name] }}"
+
+- name: Execute tengine roles
+  hosts: ansible_app_lvs
+  user: centos
+  become: true
+  become_method: sudo
+  become_user: root
+  roles:
+    - role: nginx
+    - role: cloudwatchmonitor

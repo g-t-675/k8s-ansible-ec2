@@ -1,0 +1,5 @@
+---
+- name: Deploy cloudwatch monitor
+  include_tasks: deploymonitor.yml
+  when: acname == "deploymonitor"
+  tags: ['deploymonitor']

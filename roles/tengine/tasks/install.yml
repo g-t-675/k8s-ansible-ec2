@@ -1,0 +1,57 @@
+- name: Install epel-release
+  yum:
+    name: epel-release
+    state: present
+
+- name: Install gcc lua cronolog
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - gcc
+    - lua-devel
+    - luajit-devel
+    - pcre-devel
+    - openssl-devel
+    - wget
+    - cronolog
+    - zip
+    - unzip
+
+- debug:
+    var: TENGINE_URL
+
+- name: download tengine
+  #shell: curl {{ TENGINE_URL }} -o {{ DOWNLOAD_DIR }}/tengine.tar.gz
+  shell: wget {{ TENGINE_URL }}
+  args:
+    chdir: "{{ DOWNLOAD_DIR }}"
+  #get_url:
+  #  url: "{{ TENGINE_URL }}"
+  #  dest: "{{ DOWNLOAD_DIR }}"
+  #  mode: 0644
+
+- name: Unpack tengine tar
+  shell: tar zxf {{ TARBALL_NAME }}
+  args:
+    chdir: "{{ DOWNLOAD_DIR }}"
+
+- name: Build tengine
+  shell: ./configure --prefix={{ INSTALLATION_DIR }} --with-pcre --with-http_lua_module --with-luajit-lib=/usr/lib64/ --with-luajit-inc=/usr/include/luajit-2.0/ --with-lua-inc=/usr/include/luajit-2.0/ --with-lua-lib=/usr/lib64/ --with-ld-opt=-Wl,-rpath,/usr/lib64
+  args:
+    chdir: "{{ BUILD_DIR }}"
+
+- name: Build tengine
+  shell: make install
+  args:
+    chdir: "{{ BUILD_DIR }}"
+
+- name: Create tengine log directory
+  file:
+    path: "{{ TENGINE_APP_LOG_DIR }}"
+    state: directory
+    owner: root
+    mode: 0777
+
+- name: configure tengine
+  include_tasks: configure.yml

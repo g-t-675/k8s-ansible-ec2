@@ -1,0 +1,120 @@
+#!/bin/sh
+#
+# Comments to support chkconfig
+#
+# chkconfig: 2345 77 77
+# Description: Startup script for nginx webserver
+#
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+DESC="nginx daemon"
+NAME=nginx
+DAEMON=/usr/local/nginx/sbin/$NAME
+CONFIGFILE=/usr/local/nginx/conf/$NAME.conf
+PIDFILE=/usr/local/nginx/logs/$NAME.pid
+SCRIPTNAME=/etc/init.d/$NAME
+
+#生成存放日志和管道文件的文件夹
+if [ ! -d "/data/etllogs" ]; then
+mkdir -p "/data/etllogs"
+chown root.root "/data/etllogs"
+chmod   2755  "/data/etllogs"
+else
+chown root.root -R "/data/etllogs"
+chmod   2755  "/data/etllogs"
+fi
+
+if [ ! -d "/usr/local/nginx/pipe/" ]; then
+sudo -u root mkdir -p "/usr/local/nginx/pipe/"
+fi
+
+#声明日志文件盒管道文件存放位置变量；
+LOGPATH=/data/etllogs
+PIPEPATH=/usr/local/nginx/pipe/
+
+#管道文件变量
+ACCESS_LOG_PIPE=/usr/local/nginx/pipe/access_log_pipe
+
+#cronolog命令外置变量
+CRONOLOG=/sbin/cronolog
+
+d_mkfifo(){
+
+#确认管道文件类型；
+
+if [ ! -p "$ACCESS_LOG_PIPE" ]; then
+/bin/rm "$ACCESS_LOG_PIPE"
+sudo -u root mkfifo  "$ACCESS_LOG_PIPE"
+fi
+}
+
+
+#后台启动管道文件监听
+cronolog_start()
+{
+sudo -u root nohup cat "$ACCESS_LOG_PIPE" |sudo -u root $CRONOLOG  $LOGPATH/%Y%m%d/etl_log_%Y%m%d%H.log &
+}
+
+#关闭管道文件后台启动进程
+cronolog_kill()
+{
+ps -ef|grep data/etllogs|grep -v grep |awk '{print $2}'|xargs kill -9
+ps -ef|grep nginx/pipe|grep -v grep |awk '{print $2}'|xargs kill -9
+}
+
+# Gracefully exit if the package has been removed.
+test -x $DAEMON || exit 0
+
+d_start() {
+d_mkfifo
+cronolog_start
+  $DAEMON -c $CONFIGFILE || echo -n " already running"
+}
+
+d_stop() {
+#  kill -QUIT `cat $PIDFILE` || echo -n " not running"
+cronolog_kill
+killall nginx || echo -n " not running"
+}
+
+d_reload() {
+  kill -HUP `cat $PIDFILE` || echo -n " can't reload"
+}
+
+
+case "$1" in
+  start)
+        echo -n "Starting $DESC: $NAME"
+        d_start
+        echo "."
+        ;;
+  stop)
+        echo -n "Stopping $DESC: $NAME"
+        d_stop
+        echo "."
+        ;;
+  reload)
+        echo -n "Reloading $DESC configuration..."
+        d_reload
+        echo "reloaded."
+        ;;
+  status)
+        pgrep -x $NAME > /dev/null && echo $NAME \(pid `pgrep $NAME`\) is running...|| echo "$NAME is stoped."
+        ;;
+  test|-t)
+        $DAEMON -t
+        ;;
+  restart)
+        echo -n "Restarting $DESC: $NAME"
+        d_stop
+        sleep 2
+        d_start
+        echo "...done!"
+        ;;
+  *)
+          echo "Usage: $SERVICENAME {start|stop|restart|reload|status|check}"
+          exit 3
+        ;;
+esac
+
+exit 0

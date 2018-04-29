@@ -1,0 +1,30 @@
+
+---
+- name:                  EC2 Remote facts
+  ec2_instance_facts:
+    filters:
+      "tag:Name": "{{ item.instance_tags.Name }}"
+      instance-state-name: running
+  with_items:
+    "{{ ec2_instances }}"
+  register: ec2_info
+
+- debug:
+    msg: "{{ item.0.item.instance_tags.Name }} {{ item.1.public_ip_address }}"
+  with_subelements:
+    - "{{ ec2_info.results }}"
+    - instances
+
+- name: optimize instances
+  include_tasks: optimize_helper.yml
+  with_subelements:
+    - "{{ ec2_info.results }}"
+    - instances
+  loop_control:
+    loop_var: instance_info
+
+- name: stop hosts
+  include_tasks: stop.yml
+
+- name: start hosts
+  include_tasks: start.yml

@@ -1,0 +1,19 @@
+---
+
+# roles/vpc/tasks/main.yml
+
+- name: Fail play if the acname name is not defined
+  fail: 
+    msg: "Specify the acname name: -e 'acname=launch'"
+  when: acname is undefined
+  tags: ["launch", "terminate"]
+
+- name: Launch VPC instances
+  include_tasks: launch.yml
+  when: acname == "launch"
+  tags: ["launch"]
+
+- name: Terminate VPC instances
+  include_tasks: terminate.yml
+  when: acname == "terminate"
+  tags: ["terminate"]
